@@ -1,10 +1,14 @@
 const express = require('express')
 const app = express();
+const start = require('./router/start')
+const { mongoConnect } = require("./utils/db.js");
+require('dotenv').config();
 
-app.get('/',(req,res)=>{
-    res.status(200).send("Hello User")
-})
+app.use('/',start)
 
-app.listen(3000,()=>{
-    console.log(`Server is listening on 3000..............`)
-})
+const PORT = process.env.PORT;
+mongoConnect(() => {
+    app.listen(PORT, () => {
+        console.log(`Server running on port ${PORT}`);
+    });
+});
