@@ -1,7 +1,7 @@
 
-# 🩸 BloodHealth  Web Application  
+# 🩸 BloodMatch  Web Application  
 
-BloodHealth is a robust full-stack web application designed to power blood donation services. It supports user registration, profile management, membership purchases, reminders, notifications, and includes geolocation-based mapping features to help connect donors and recipients effectively.
+BloodMatch is a robust full-stack web application designed to power blood donation services. It supports user registration, profile management, membership purchases, reminders, notifications, and includes geolocation-based mapping features to help connect donors and recipients effectively.
 
 ## Features
 
