@@ -21,7 +21,6 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static("public"));
 app.use("/", authRoutes);
-app.use("/auth", authRoutes);
 app.use('/geocode', geocodeRoutes);
 app.use("/profile", profileRoutes);
 app.use("/purchase", purchaseMembershipRouter);
