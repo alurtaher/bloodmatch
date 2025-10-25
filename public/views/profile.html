@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BloodMatch - Profile</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #fef2f2;
+            color: #0f172a;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+        }
+        .navbar {
+            background-color: #ffffff;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            padding: 0.8rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            transition: box-shadow 0.3s ease;
+        }
+        .navbar.scrolled {
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+        }
+        .navbar-brand {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #b91c1c;
+            transition: color 0.3s ease;
+        }
+        .navbar-brand:hover {
+            color: #991b1b;
+        }
+        .nav-link {
+            color: #1f2937 !important;
+            font-weight: 500;
+            margin: 0 0.8rem;
+            font-size: 0.9rem;
+            position: relative;
+            transition: color 0.3s ease;
+        }
+        .nav-link.active {
+            color: #b91c1c !important;
+            font-weight: 600;
+        }
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background-color: #b91c1c;
+            transition: width 0.3s ease;
+        }
+        .nav-link:hover::after, .nav-link.active::after {
+            width: 100%;
+        }
+        .nav-link:hover {
+            color: #b91c1c !important;
+        }
+        .notification-badge {
+            background-color: #b91c1c;
+            color: #ffffff;
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 0.2rem 0.5rem;
+            border-radius: 50px;
+            transition: transform 0.3s ease;
+        }
+        .notification-badge.updated {
+            animation: pulse 0.5s ease-in-out 2;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+        .btn-logout {
+            background-color: #b91c1c;
+            color: #ffffff;
+            font-size: 0.9rem;
+            padding: 0.5rem 1.5rem;
+            border-radius: 50px;
+            border: none;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .btn-logout:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+            background-color: #991b1b;
+        }
+        .dashboard-section {
+            padding: 60px 0;
+            background: linear-gradient(145deg, #b91c1c 0%, #1e40af 100%);
+            color: #ffffff;
+            position: relative;
+            min-height: calc(100vh - 120px);
+            display: flex;
+            align-items: center;
+        }
+        .dashboard-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.2);
+            z-index: 1;
+        }
+        .dashboard-section > .container {
+            position: relative;
+            z-index: 2;
+        }
+        .section-title {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+        .section-subtitle {
+            font-size: 1.1rem;
+            max-width: 600px;
+            margin: 0 auto 2rem;
+            line-height: 1.6;
+            text-align: center;
+        }
+        .profile-card {
+            background: #ffffff;
+            border-radius: 15px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            max-width: 400px;
+            margin: 0 auto;
+        }
+        .form-label {
+            font-weight: 600;
+            color: #0f172a;
+            margin-bottom: 0.3rem;
+            font-size: 0.9rem;
+        }
+        .form-control, .form-select {
+            border-radius: 8px;
+            border: 1px solid #d1d5db;
+            padding: 0.5rem;
+            font-size: 0.9rem;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: #b91c1c;
+            box-shadow: 0 0 6px rgba(185, 28, 28, 0.2);
+            outline: none;
+        }
+        .form-control[readonly] {
+            background-color: #e9ecef;
+            cursor: not-allowed;
+        }
+        .btn-edit, .btn-save, .btn-cancel {
+            font-size: 0.9rem;
+            padding: 0.5rem 1.5rem;
+            border-radius: 50px;
+            border: none;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .btn-edit {
+            background-color: #f59e0b;
+            color: #1f2937;
+        }
+        .btn-edit:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+        }
+        .btn-save {
+            background-color: #1e3a8a;
+            color: #ffffff;
+        }
+        .btn-save:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+            background-color: #1e40af;
+        }
+        .btn-cancel {
+            background-color: #b91c1c;
+            color: #ffffff;
+        }
+        .btn-cancel:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+            background-color: #991b1b;
+        }
+        .profile-field {
+            margin-bottom: 1rem;
+        }
+        .profile-field span {
+            font-size: 0.9rem;
+            color: #1f2937;
+        }
+        .error-message {
+            color: #b91c1c;
+            font-size: 0.9rem;
+            text-align: center;
+            margin-top: 1rem;
+        }
+        .success-message {
+            color: #15803d;
+            font-size: 0.9rem;
+            text-align: center;
+            margin-top: 1rem;
+        }
+        .spinner {
+            display: none;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #b91c1c;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+            margin: 1rem auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        footer {
+            background-color: #0f172a;
+            color: #ffffff;
+            padding: 20px 0;
+            text-align: center;
+        }
+        footer a {
+            color: #f59e0b;
+            text-decoration: none;
+            margin: 0 0.8rem;
+            font-size: 0.9rem;
+            transition: color 0.3s ease;
+        }
+        footer a:hover {
+            color: #b91c1c;
+        }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .slide-in {
+            opacity: 0;
+            animation: slideIn 0.8s ease-out forwards;
+        }
+        a:focus, button:focus, select:focus, input:focus {
+            outline: 2px solid #f59e0b;
+            outline-offset: 2px;
+        }
+        @media (max-width: 576px) {
+            .section-title {
+                font-size: 1.8rem;
+            }
+            .section-subtitle {
+                font-size: 1rem;
+            }
+            .profile-card {
+                padding: 1.2rem;
+                max-width: 90%;
+            }
+            .form-label, .form-control, .form-select {
+                font-size: 0.85rem;
+            }
+            .btn-edit, .btn-save, .btn-cancel {
+                font-size: 0.85rem;
+                padding: 0.5rem 1.2rem;
+            }
+            .profile-field span {
+                font-size: 0.85rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg">
+        <div class="container">
+            <a class="navbar-brand" href="/">BloodMatch</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="/">Home</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/matches">Matches Found</a></li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/notifications">Notifications <span class="notification-badge" id="notificationBadge">0</span></a>
+                    </li>
+                    <li class="nav-item"><a class="nav-link active" href="/profile">Profile</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/buy-premium">Buy Premium</a></li>
+                    <li class="nav-item">
+                        <button class="btn-logout" id="logoutBtn" aria-label="Logout">Logout</button>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <section class="dashboard-section">
+        <div class="container">
+            <h2 class="section-title slide-in">Your Profile</h2>
+            <p class="section-subtitle slide-in" style="animation-delay: 0.2s;">
+                View and update your personal information.
+            </p>
+            <div class="profile-card slide-in" style="animation-delay: 0.4s;">
+                <div id="profileView" role="region" aria-live="polite">
+                    <div class="profile-field">
+                        <strong>Name:</strong> <span id="profileName"></span>
+                    </div>
+                    <div class="profile-field">
+                        <strong>Email:</strong> <span id="profileEmail"></span>
+                    </div>
+                    <div class="profile-field">
+                        <strong>Blood Group:</strong> <span id="profileBloodGroup"></span>
+                    </div>
+                    <div class="profile-field">
+                        <strong>Phone:</strong> <span id="profilePhone"></span>
+                    </div>
+                    <div class="profile-field">
+                        <strong>City:</strong> <span id="profileCity"></span>
+                    </div>
+                    <div class="profile-field">
+                        <strong>Role:</strong> <span id="profileRole"></span>
+                    </div>
+                    <button class="btn btn-edit mt-3" id="editBtn" data-bs-toggle="tooltip" title="Edit your profile">Edit Profile</button>
+                </div>
+                <form id="profileForm" class="row g-3" style="display: none;" role="form">
+                    <div class="col-12">
+                        <label for="name" class="form-label" data-bs-toggle="tooltip" title="Enter your full name">Name</label>
+                        <input type="text" class="form-control" id="name" name="name" maxlength="50" aria-label="Full Name" required>
+                    </div>
+                    <div class="col-12">
+                        <label for="emailId" class="form-label" data-bs-toggle="tooltip" title="Your email cannot be changed">Email</label>
+                        <input type="email" class="form-control" id="emailId" name="emailId" readonly aria-label="Email Address">
+                    </div>
+                    <div class="col-12">
+                        <label for="bloodGroup" class="form-label" data-bs-toggle="tooltip" title="Select your blood group">Blood Group</label>
+                        <select class="form-select" id="bloodGroup" name="bloodGroup" aria-label="Blood Group" required>
+                            <option value="" disabled>Select blood group</option>
+                            <option value="A+">A+</option>
+                            <option value="A-">A-</option>
+                            <option value="B+">B+</option>
+                            <option value="B-">B-</option>
+                            <option value="AB+">AB+</option>
+                            <option value="AB-">AB-</option>
+                            <option value="O+">O+</option>
+                            <option value="O-">O-</option>
+                        </select>
+                    </div>
+                    <div class="col-12">
+                        <label for="phone" class="form-label" data-bs-toggle="tooltip" title="Enter your 10-digit phone number">Phone</label>
+                        <input type="tel" class="form-control" id="phone" name="phone" pattern="[0-9]{10}" aria-label="Phone Number" required>
+                    </div>
+                    <div class="col-12">
+                        <label for="city" class="form-label" data-bs-toggle="tooltip" title="Enter your city for location-based matching">City</label>
+                        <input type="text" class="form-control" id="city" name="city" aria-label="City" required>
+                    </div>
+                    <div class="col-12">
+                        <label for="role" class="form-label" data-bs-toggle="tooltip" title="Your role cannot be changed">Role</label>
+                        <input type="text" class="form-control" id="role" name="role" readonly aria-label="Role">
+                    </div>
+                    <div class="col-6">
+                        <button type="submit" class="btn btn-save" data-bs-toggle="tooltip" title="Save changes to your profile">Save</button>
+                    </div>
+                    <div class="col-6">
+                        <button type="button" class="btn btn-cancel" id="cancelBtn" data-bs-toggle="tooltip" title="Cancel editing">Cancel</button>
+                    </div>
+                </form>
+                <div class="spinner" id="profileSpinner" aria-label="Loading profile"></div>
+                <div id="profileMessage" class="mt-3" role="alert"></div>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 BloodMatch. All rights reserved.</p>
+            <a href="/privacy">Privacy Policy</a> |
+            <a href="/terms">Terms of Service</a> |
+            <a href="/contact">Contact Us</a>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    <script>
+        // Initialize Bootstrap Tooltips
+        const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+        const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
+
+        // Navbar Scroll Effect
+        window.addEventListener('scroll', () => {
+            const navbar = document.querySelector('.navbar');
+            if (window.scrollY > 50) {
+                navbar.classList.add('scrolled');
+            } else {
+                navbar.classList.remove('scrolled');
+            }
+        });
+
+        // Authentication Check
+        const token = localStorage.getItem('token');
+        if (!token) {
+            alert('Please log in to access the dashboard.');
+            window.location.href = '/login';
+        }
+
+        // Update Notification Badge
+        function updateNotificationBadge() {
+            const notifications = JSON.parse(localStorage.getItem('notifications') || '[]');
+            const fulfilledCount = notifications.filter(n => n.status === 'fulfilled').length;
+            const notificationBadge = document.getElementById('notificationBadge');
+            notificationBadge.textContent = fulfilledCount;
+            if (fulfilledCount > 0) {
+                notificationBadge.classList.add('updated');
+                setTimeout(() => notificationBadge.classList.remove('updated'), 1000);
+            }
+        }
+
+        // Fetch User Profile
+        async function fetchUserData() {
+            const profileSpinner = document.getElementById('profileSpinner');
+            profileSpinner.style.display = 'block';
+            try {
+                const response = await axios.get('http://localhost:3000/api/user', {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                const user = response.data;
+                document.getElementById('profileName').textContent = user.name || 'N/A';
+                document.getElementById('profileEmail').textContent = user.emailId || 'N/A';
+                document.getElementById('profileBloodGroup').textContent = user.bloodGroup || 'N/A';
+                document.getElementById('profilePhone').textContent = user.phone || 'N/A';
+                document.getElementById('profileCity').textContent = user.city || 'N/A';
+                document.getElementById('profileRole').textContent = user.role || 'N/A';
+
+                // Populate form for editing
+                document.getElementById('name').value = user.name || '';
+                document.getElementById('emailId').value = user.emailId || '';
+                document.getElementById('bloodGroup').value = user.bloodGroup || '';
+                document.getElementById('phone').value = user.phone || '';
+                document.getElementById('city').value = user.city || '';
+                document.getElementById('role').value = user.role || '';
+                profileSpinner.style.display = 'none';
+            } catch (error) {
+                console.error('Error fetching user data:', error);
+                profileSpinner.style.display = 'none';
+                document.getElementById('profileMessage').innerHTML = `<p class="error-message">${error.response?.data?.error || 'Failed to load profile. Please try again.'}</p>`;
+                if (error.response?.status === 401) {
+                    localStorage.removeItem('token');
+                    window.location.href = '/login';
+                }
+            }
+        }
+
+        // Toggle Edit Mode
+        document.getElementById('editBtn').addEventListener('click', () => {
+            document.getElementById('profileView').style.display = 'none';
+            document.getElementById('profileForm').style.display = 'block';
+            document.getElementById('profileMessage').innerHTML = '';
+        });
+
+        // Cancel Edit
+        document.getElementById('cancelBtn').addEventListener('click', () => {
+            document.getElementById('profileForm').style.display = 'none';
+            document.getElementById('profileView').style.display = 'block';
+            document.getElementById('profileMessage').innerHTML = '';
+            fetchUserData(); // Reload to reset form
+        });
+
+        // Update Profile
+        document.getElementById('profileForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const name = document.getElementById('name').value.trim();
+            const bloodGroup = document.getElementById('bloodGroup').value;
+            const phone = document.getElementById('phone').value.trim();
+            const city = document.getElementById('city').value.trim();
+            const profileSpinner = document.getElementById('profileSpinner');
+            const profileMessage = document.getElementById('profileMessage');
+
+            // Client-side validation
+            if (!name || name.length > 50) {
+                profileMessage.innerHTML = '<p class="error-message">Name is required and must be 50 characters or less.</p>';
+                return;
+            }
+            if (!['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'].includes(bloodGroup)) {
+                profileMessage.innerHTML = '<p class="error-message">Please select a valid blood group.</p>';
+                return;
+            }
+            if (!/^[0-9]{10}$/.test(phone)) {
+                profileMessage.innerHTML = '<p class="error-message">Phone must be a 10-digit number.</p>';
+                return;
+            }
+            if (!city) {
+                profileMessage.innerHTML = '<p class="error-message">City is required.</p>';
+                return;
+            }
+
+            profileSpinner.style.display = 'block';
+            try {
+                // Geocode city to get coordinates
+                const geocodeResponse = await axios.get('https://api.opencagedata.com/geocode/v1/json', {
+                    params: {
+                        q: city,
+                        key: 'your_opencage_api_key', // Replace with actual key
+                        limit: 1
+                    }
+                });
+                if (geocodeResponse.data.results.length === 0) {
+                    throw new Error('Invalid city name');
+                }
+                const { lat, lng } = geocodeResponse.data.results[0].geometry;
+
+                // Update profile
+                const response = await axios.put('http://localhost:3000/api/user', {
+                    name,
+                    bloodGroup,
+                    phone,
+                    city,
+                    location: { type: 'Point', coordinates: [lng, lat] }
+                }, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+
+                profileSpinner.style.display = 'none';
+                profileMessage.innerHTML = '<p class="success-message">Profile updated successfully!</p>';
+                document.getElementById('profileForm').style.display = 'none';
+                document.getElementById('profileView').style.display = 'block';
+                fetchUserData();
+            } catch (error) {
+                console.error('Error updating profile:', error);
+                profileSpinner.style.display = 'none';
+                profileMessage.innerHTML = `<p class="error-message">${error.response?.data?.error || 'Failed to update profile. Please try again.'}</p>`;
+            }
+        });
+
+        // Logout
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            localStorage.removeItem('token');
+            localStorage.removeItem('notifications');
+            window.location.href = '/login';
+        });
+
+        // Initialize
+        fetchUserData().then(() => {
+            updateNotificationBadge();
+        });
+    </script>
+    <style>
+        .slide-in {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+        }
+        .slide-in.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    </style>
+</body>
+</html>
